@@ -3,7 +3,6 @@ __pycache__/
 .env
 venv/
 env/
-models/
 organized/
 temp_uploads/
 trainable_data/
