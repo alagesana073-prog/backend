@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+venv/
+env/
+models/
+organized/
+temp_uploads/
+trainable_data/
+New folder/
