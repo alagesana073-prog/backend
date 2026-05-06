@@ -40,25 +40,22 @@ def extract_text(file_path):
     try:
         # PDF files
         if file_path.lower().endswith(".pdf"):
-            poppler_path = None
-            for pp in POPPLER_PATHS:
-                if os.path.exists(pp):
-                    poppler_path = pp
-                    break
-
-            if poppler_path:
+            try:
+                # IMPORTANT: Only process the first 2 pages at lower DPI to prevent Out-Of-Memory (OOM) crashes on Render!
                 pages = convert_from_path(
                     file_path,
-                    dpi=200,
-                    poppler_path=poppler_path
+                    dpi=150,
+                    first_page=1,
+                    last_page=2
                 )
 
                 for page in pages:
                     img = np.array(page)
                     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                     text += pytesseract.image_to_string(gray)
-            else:
-                print(f"[WARNING] Poppler not found, cannot process PDF: {file_path}")
+            except Exception as e:
+                print(f"[ERROR] PDF processing failed: {e}")
+
 
         # Image files
         elif file_path.lower().endswith((".png", ".jpg", ".jpeg")):
