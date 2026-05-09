@@ -25,4 +25,4 @@ COPY . .
 EXPOSE 5000
 
 # Start the application with Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:$PORT", "--workers", "1", "--threads", "4", "--timeout", "120", "api:app"]
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 api:app
