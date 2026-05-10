@@ -24,5 +24,6 @@ COPY . .
 # Let Railway automatically manage the port
 # Removed EXPOSE 5000 to prevent port routing conflicts on Railway
 
-# Start the application with Gunicorn using explicit shell expansion
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 1 --threads 4 --timeout 120 api:app"]
+# Start the application using Python directly so it inherently uses os.environ.get('PORT')
+# This guarantees exact matching behavior with Railway's dynamic PORT injection
+CMD ["python", "api.py"]
