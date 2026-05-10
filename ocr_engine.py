@@ -40,20 +40,19 @@ def extract_text(file_path):
     try:
         # PDF files
         if file_path.lower().endswith(".pdf"):
+            import gc
             try:
-                # IMPORTANT: Only process the first 2 pages at lower DPI to prevent Out-Of-Memory (OOM) crashes on Render!
+                # IMPORTANT: Only process the first page at very low DPI (100) to prevent OOM on Render
                 try:
-                    # First try relying on system PATH (works for Render/Linux)
-                    pages = convert_from_path(file_path, dpi=150, first_page=1, last_page=2)
+                    pages = convert_from_path(file_path, dpi=100, first_page=1, last_page=1)
                 except Exception:
-                    # Fallback to explicit poppler paths (for local Windows testing)
                     poppler_path = None
                     for pp in POPPLER_PATHS:
                         if os.path.exists(pp):
                             poppler_path = pp
                             break
                     if poppler_path:
-                        pages = convert_from_path(file_path, dpi=150, first_page=1, last_page=2, poppler_path=poppler_path)
+                        pages = convert_from_path(file_path, dpi=100, first_page=1, last_page=1, poppler_path=poppler_path)
                     else:
                         raise Exception("Poppler not found in system PATH or predefined paths.")
 
@@ -61,6 +60,14 @@ def extract_text(file_path):
                     img = np.array(page)
                     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
                     text += pytesseract.image_to_string(gray)
+                    # Aggressively clear memory
+                    del img
+                    del gray
+                    del page
+                    gc.collect()
+                
+                del pages
+                gc.collect()
                     
             except Exception as e:
                 print(f"[ERROR] PDF processing failed: {e}")
@@ -68,6 +75,7 @@ def extract_text(file_path):
 
         # Image files
         elif file_path.lower().endswith((".png", ".jpg", ".jpeg")):
+            import gc
             img = cv2.imread(file_path)
 
             if img is None:
@@ -76,13 +84,18 @@ def extract_text(file_path):
 
             # Resize large images to prevent Out-Of-Memory (OOM) crashes on Render!
             height, width = img.shape[:2]
-            max_dim = 1500
+            max_dim = 1000  # Reduced from 1500 to aggressively save memory
             if max(height, width) > max_dim:
                 scale = max_dim / max(height, width)
                 img = cv2.resize(img, (int(width * scale), int(height * scale)), interpolation=cv2.INTER_AREA)
 
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             text = pytesseract.image_to_string(gray)
+            
+            # Aggressively clear memory
+            del img
+            del gray
+            gc.collect()
 
         # TXT files
         elif file_path.lower().endswith(".txt"):
