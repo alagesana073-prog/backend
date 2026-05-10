@@ -100,11 +100,13 @@ def extract_text(file_path):
         # TXT files
         elif file_path.lower().endswith(".txt"):
             with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-                text = f.read()
+                # Limit to first 5000 chars to prevent memory overload during ML classification
+                text = f.read(5000)
 
         # CSV files
         elif file_path.lower().endswith(".csv"):
-            df = pd.read_csv(file_path)
+            # Only read the first 50 rows to prevent massive RAM spikes when converting to string
+            df = pd.read_csv(file_path, nrows=50)
             text = df.to_string()
 
         else:
